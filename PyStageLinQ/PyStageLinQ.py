@@ -117,7 +117,7 @@ will start a bunch of subprocesses.
                 # Devices found, setting new timeout
                 loop_timeout = time.time() + timeout
 
-                if 0 == discovery_frame.Port:
+                if discovery_frame.Port == 0:
                     # If port is 0 there are no services to request
                     continue
 
@@ -172,8 +172,6 @@ This function is used to subscribe to a statemap service provided by a StageLinQ
         self.tasks.add(asyncio.create_task(self._PyStageLinQStrapper()))
 
         await self._wait_for_exit()
-
-        pass
 
     async def _wait_for_exit(self):
         while True:

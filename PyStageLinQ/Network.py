@@ -32,11 +32,15 @@ class StageLinQService:
 
     def get_services(self):
         if self.services_available:
-            return_list = []
-            for service in self.service_list:
-                return_list.append(EngineServices.ServiceHandle(device=self.device_name, ip=self.Ip, service=service[0],
-                                                                port=service[1]))
-            return return_list
+            return [
+                EngineServices.ServiceHandle(
+                    device=self.device_name,
+                    ip=self.Ip,
+                    service=service[0],
+                    port=service[1],
+                )
+                for service in self.service_list
+            ]
 
     async def get_tasks(self):
         while not self.init_complete:
@@ -100,9 +104,11 @@ class StageLinQService:
                     self.service_list.append([frame.Service, frame.Port])
                     adding_services = True
 
-                if self.DeviceToken.get_token() == 0:
-                    if type(frame) is StageLinQServiceAnnouncementData or type(frame) is StageLinQServiceRequestService:
-                        self.DeviceToken.set_token(int.from_bytes(frame.Token, byteorder='big'))
+                if self.DeviceToken.get_token() == 0 and (
+                    type(frame) is StageLinQServiceAnnouncementData
+                    or type(frame) is StageLinQServiceRequestService
+                ):
+                    self.DeviceToken.set_token(int.from_bytes(frame.Token, byteorder='big'))
 
                 if type(frame) is StageLinQReference:
                     asyncio.create_task(self.send_reference_message())
@@ -153,5 +159,3 @@ class StageLinQService:
             self.Socket.close()
         except AttributeError:
             print("Failed to close network, possible it was not initalized")
-            # Socket not inited, nothing to close
-            pass

@@ -376,16 +376,15 @@ class StateMapSubscription:
             if len(blocks[-1]) < 4:
                 trailing_data = blocks[-1]
 
-            if len(blocks[-1]) != int.from_bytes(blocks[-1][0:4], byteorder='big') + 4:
+            if (
+                len(blocks[-1])
+                != int.from_bytes(blocks[-1][:4], byteorder='big') + 4
+            ):
                 # Last block not completely received
                 trailing_data = blocks.pop()
 
-            received_fields = []
-            for block in blocks:
-                received_fields.append(self.verify_block(block))
-
+            received_fields = [self.verify_block(block) for block in blocks]
             if self._callback is not None:
-                pass
                 self._callback(received_fields)
 
 
@@ -394,8 +393,8 @@ class StateMapSubscription:
     def decode_multi_block(frame):
         blocks = []
         while len(frame) > 4:
-            block_len = int.from_bytes(frame[0:4], byteorder='big') + 4
-            blocks.append(frame[0:block_len])
+            block_len = int.from_bytes(frame[:4], byteorder='big') + 4
+            blocks.append(frame[:block_len])
             frame = frame[block_len:]
 
         if len(frame) > 0:
@@ -409,7 +408,7 @@ class StateMapSubscription:
         if len(block) < 4:
             raise Exception("Block is to short to contain length")
 
-        block_length = int.from_bytes(block[0:4], byteorder='big')
+        block_length = int.from_bytes(block[:4], byteorder='big')
 
         # Note: -4 is needed as block_length does not include its own length.
         if len(block) - 4 != block_length:

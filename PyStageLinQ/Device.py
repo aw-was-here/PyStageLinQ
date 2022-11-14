@@ -12,22 +12,21 @@ class DeviceList:
 
     def find_registered_device(self, discovery_frame) -> DataClasses.StageLinQDiscoveryData:
         # Check if main link has been established for Offline analyzers
-        if discovery_frame.SwName == "OfflineAnalyzer":
-            if not self.find_main_interface(discovery_frame):
-                return True
+        if (
+            discovery_frame.SwName == "OfflineAnalyzer"
+            and not self.find_main_interface(discovery_frame)
+        ):
+            return True
 
-        # Check if device is registered
-        for device in self.device_list:
-            if discovery_frame.DeviceName == device.device_name:
-                if discovery_frame.ReqServicePort == device.Port:
-                    # Device already registered
-                    return True
-        return False
+        return any(
+            discovery_frame.DeviceName == device.device_name
+            and discovery_frame.ReqServicePort == device.Port
+            for device in self.device_list
+        )
 
     def find_main_interface(self, discovery_frame) -> DataClasses.StageLinQDiscoveryData:
-        for device in self.device_list:
-            if device.device_name == discovery_frame.DeviceName:
-                if device.sw_name != "OfflineAnalyzer":
-                    return True
-
-        return False
+        return any(
+            device.device_name == discovery_frame.DeviceName
+            and device.sw_name != "OfflineAnalyzer"
+            for device in self.device_list
+        )

@@ -84,10 +84,12 @@ class StageLinQDiscovery(StageLinQMessage):
 
 
     def verify_discovery_data(self, discovery_data) -> StageLinQDiscoveryData:
-        ret = PyStageLinQError.STAGELINQOK
-        if (0 > discovery_data.ReqServicePort) or (65535 < discovery_data.ReqServicePort):
-            ret = PyStageLinQError.INVALIDDISCOVERYDATA
-        return ret
+        return (
+            PyStageLinQError.INVALIDDISCOVERYDATA
+            if discovery_data.ReqServicePort < 0
+            or discovery_data.ReqServicePort > 65535
+            else PyStageLinQError.STAGELINQOK
+        )
 
     def get_data(self):
         return StageLinQDiscoveryData(self.token, self.device_name, self.connection_type, self.sw_name, self.sw_version,
@@ -111,7 +113,11 @@ class StageLinQDiscovery(StageLinQMessage):
         if self.stagelinq_magic_flag != frame[self.magic_flag_start:self.magic_flag_stop]:
             return PyStageLinQError.MAGICFLAGNOTFOUND
 
-        self.token.set_token(int.from_bytes(frame[token_start:token_stop], byteorder='big'))
+        self.token.set_token(
+            int.from_bytes(
+                frame[token_start:device_name_size_start], byteorder='big'
+            )
+        )
 
         connection_type_start, self.device_name = self.ReadNetworkString(frame, device_name_size_start)
         sw_name_start, self.connection_type = self.ReadNetworkString(frame, connection_type_start)
